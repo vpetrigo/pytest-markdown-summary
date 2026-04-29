@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import pathlib
+from typing import Self
 
 import pytest
 from py_markdown_table.markdown_table import markdown_table
@@ -20,7 +21,7 @@ class _TestResult:
     xpass_count: int = 0
     xfail_count: int = 0
 
-    def __iadd__(self, other: _TestResult) -> _TestResult:
+    def __iadd__(self, other: _TestResult) -> Self:
         self.count += other.count
         self.pass_count += other.pass_count
         self.fail_count += other.fail_count
@@ -104,11 +105,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
 
     rep = outcome.get_result()
     use_test_names = item.config.getoption(_USE_TEST_NAMES_OPTION)
-
-    if use_test_names:
-        nodeid = _get_base_nodeid(item)
-    else:
-        nodeid = _get_file_nodeid(item)
+    nodeid = _get_base_nodeid(item) if use_test_names else _get_file_nodeid(item)
 
     if nodeid not in _tracker.tests:
         _tracker.tests[nodeid] = _TestResult()
@@ -136,13 +133,12 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
             elif rep.outcome == "failed":
                 # Strict xfail: test passed but strict mode treats as failure
                 node.xpass_count += 1
-        else:
-            if rep.outcome == "passed":
-                node.pass_count += 1
-            elif rep.outcome == "failed":
-                node.fail_count += 1
-            elif rep.outcome == "skipped":
-                node.skip_count += 1
+        elif rep.outcome == "passed":
+            node.pass_count += 1
+        elif rep.outcome == "failed":
+            node.fail_count += 1
+        elif rep.outcome == "skipped":
+            node.skip_count += 1
 
 
 def _result_row(name: str, result: _TestResult) -> dict[str, str]:
