@@ -45,6 +45,12 @@ requires = [
     "hatch-pip-compile"
 ]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github",
+    "/requirements",
+]
+
 [tool.hatch.envs.default]
 installer = "uv"
 type = "pip-compile"
