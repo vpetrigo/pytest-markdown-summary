@@ -7,8 +7,8 @@ from typing import Self
 import pytest
 from py_markdown_table.markdown_table import markdown_table
 
-_REPORT_FILE_OPTION = "--md-report-file"
-_USE_TEST_NAMES_OPTION = "--md-use-test-names"
+_REPORT_FILE_OPTION = "--markdown-summary-file"
+_USE_TEST_NAMES_OPTION = "--markdown-summary-use-test-names"
 
 
 @dataclasses.dataclass(slots=True)
@@ -73,7 +73,7 @@ def _escape_markdown(text: str) -> str:
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    group = parser.getgroup("markdown-report", "Markdown report generation")
+    group = parser.getgroup("markdown-summary", "Markdown summary report generation")
     group.addoption(
         _REPORT_FILE_OPTION,
         action="store",

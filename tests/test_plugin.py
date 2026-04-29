@@ -1,4 +1,4 @@
-"""Tests for pytest-markdown-report plugin using pytester."""
+"""Tests for pytest-markdown-summary plugin using pytester."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ def run_with_plugin(pytester: pytest.Pytester, tmp_path):
     report_file = tmp_path / "report.md"
 
     def _run(*args: str, use_test_names: bool = True):
-        cmd = ["-p", "pytest_markdown_report", f"--md-report-file={report_file}"]
+        cmd = ["-p", "pytest_markdown_summary", f"--md-report-file={report_file}"]
         if use_test_names:
             cmd.append("--md-use-test-names")
         cmd.extend(args)
@@ -30,7 +30,7 @@ class TestCLIOptions:
             def test_pass():
                 assert True
         """)
-        result = pytester.runpytest("-p", "pytest_markdown_report")
+        result = pytester.runpytest("-p", "pytest_markdown_summary")
         # No markdown table in stdout
         output = result.stdout.str()
         assert "Passed" not in output or "Subtotal" not in output
@@ -43,7 +43,7 @@ class TestCLIOptions:
                 assert True
         """)
         pytester.runpytest(
-            "-p", "pytest_markdown_report",
+            "-p", "pytest_markdown_summary",
             f"--md-report-file={report_file}",
             "--md-use-test-names",
         )
@@ -60,7 +60,7 @@ class TestCLIOptions:
                 assert True
         """)
         pytester.runpytest(
-            "-p", "pytest_markdown_report",
+            "-p", "pytest_markdown_summary",
             f"--md-report-file={report_file}",
             "--md-use-test-names",
         )
@@ -390,7 +390,7 @@ class TestEdgeCases:
             x = 1
         """)
         result = pytester.runpytest(
-            "-p", "pytest_markdown_report",
+            "-p", "pytest_markdown_summary",
             f"--md-report-file={report_file}",
             "--md-use-test-names",
             "--no-header",
@@ -466,7 +466,7 @@ class TestEdgeCases:
             """,
         )
         pytester.runpytest(
-            "-p", "pytest_markdown_report",
+            "-p", "pytest_markdown_summary",
             f"--md-report-file={report_file}",
         )
         content = report_file.read_text(encoding="utf-8")

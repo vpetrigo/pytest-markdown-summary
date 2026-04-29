@@ -1,6 +1,6 @@
-# pytest-markdown-report
+# pytest-markdown-summary
 
-[![PyPI - Version](https://img.shields.io/pypi/v/pytest-markdown-report.svg)](https://pypi.org/project/pytest-markdown-report)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytest-markdown-report.svg)](https://pypi.org/project/pytest-markdown-report)
+[![PyPI - Version](https://img.shields.io/pypi/v/pytest-markdown-summary.svg)](https://pypi.org/project/pytest-markdown-summary)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytest-markdown-summary.svg)](https://pypi.org/project/pytest-markdown-summary)
 
 -----

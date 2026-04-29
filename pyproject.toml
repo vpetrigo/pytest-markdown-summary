@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pytest-markdown-report"
+name = "pytest-markdown-summary"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
@@ -30,15 +30,15 @@ dependencies = [
 ]
 
 [project.entry-points.pytest11]
-pytest_markdown_report = "pytest_markdown_report.plugin"
+pytest_markdown_summary = "pytest_markdown_summary.plugin"
 
 [project.urls]
-Documentation = "https://github.com/vpetrigo/pytest-markdown-report#readme"
-Issues = "https://github.com/vpetrigo/pytest-markdown-report/issues"
-Source = "https://github.com/vpetrigo/pytest-markdown-report"
+Documentation = "https://github.com/vpetrigo/pytest-markdown-summary#readme"
+Issues = "https://github.com/vpetrigo/pytest-markdown-summary/issues"
+Source = "https://github.com/vpetrigo/pytest-markdown-summary"
 
 [tool.hatch.version]
-path = "src/pytest_markdown_report/__about__.py"
+path = "src/pytest_markdown_summary/__about__.py"
 
 [tool.hatch.env]
 requires = [
@@ -57,7 +57,7 @@ extra-dependencies = [
 ]
 
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/pytest_markdown_report tests}"
+check = "mypy --install-types --non-interactive {args:src/pytest_markdown_summary tests}"
 
 [tool.hatch.envs.test]
 installer = "uv"
@@ -80,16 +80,16 @@ matrix.pytest.dependencies = [
 ]
 
 [tool.coverage.run]
-source_pkgs = ["pytest_markdown_report", "tests"]
+source_pkgs = ["pytest_markdown_summary", "tests"]
 branch = true
 parallel = true
 omit = [
-    "src/pytest_markdown_report/__about__.py",
+    "src/pytest_markdown_summary/__about__.py",
 ]
 
 [tool.coverage.paths]
-pytest_markdown_report = ["src/pytest_markdown_report", "*/pytest-markdown-report/src/pytest_markdown_report"]
-tests = ["tests", "*/pytest-markdown-report/tests"]
+pytest_markdown_summary = ["src/pytest_markdown_summary", "*/pytest-markdown-summary/src/pytest_markdown_summary"]
+tests = ["tests", "*/pytest-markdown-summary/tests"]
 
 [tool.coverage.report]
 exclude_lines = [
