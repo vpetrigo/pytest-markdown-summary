@@ -1,7 +1,8 @@
 # pytest-markdown-summary
 
-[![PyPI - Version](https://img.shields.io/pypi/v/pytest-markdown-summary.svg)](https://pypi.org/project/pytest-markdown-summary)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytest-markdown-summary.svg)](https://pypi.org/project/pytest-markdown-summary)
+[![CI](https://github.com/vpetrigo/pytest-markdown-summary/actions/workflows/ci.yml/badge.svg)](https://github.com/vpetrigo/pytest-markdown-summary/actions/workflows/ci.yml)
+![PyPI - Version](https://img.shields.io/pypi/v/pytest-markdown-summary)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytest-markdown-summary)
 
 A [pytest](https://docs.pytest.org/) plugin that generates a Markdown summary table of your test results. Useful for CI
 pipelines, pull request comments, and automated reporting.
