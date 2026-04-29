@@ -16,8 +16,6 @@ authors = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -27,7 +25,7 @@ classifiers = [
     "Framework :: Pytest",
 ]
 dependencies = [
-    "pytest>=7",
+    "pytest>=7,<10",
     "py-markdown-table~=1.3",
 ]
 
@@ -35,9 +33,9 @@ dependencies = [
 pytest_markdown_report = "pytest_markdown_report.plugin"
 
 [project.urls]
-Documentation = "https://github.com/Vladimir Petrigo/pytest-markdown-report#readme"
-Issues = "https://github.com/Vladimir Petrigo/pytest-markdown-report/issues"
-Source = "https://github.com/Vladimir Petrigo/pytest-markdown-report"
+Documentation = "https://github.com/vpetrigo/pytest-markdown-report#readme"
+Issues = "https://github.com/vpetrigo/pytest-markdown-report/issues"
+Source = "https://github.com/vpetrigo/pytest-markdown-report"
 
 [tool.hatch.version]
 path = "src/pytest_markdown_report/__about__.py"
