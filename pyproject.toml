@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pytest-markdown-report"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = []
+authors = [
+    { name = "Vladimir Petrigo", email = "vladimir.petrigo@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Framework :: Pytest",
+]
+dependencies = [
+    "pytest>=6.2.4; python_version < '3.14'",
+    "pytest>=7.4; python_version >= '3.14'",
+    "py-markdown-table~=1.3",
+]
+
+[project.entry-points.pytest11]
+pytest_markdown_report = "pytest_markdown_report.plugin"
+
+[project.urls]
+Documentation = "https://github.com/Vladimir Petrigo/pytest-markdown-report#readme"
+Issues = "https://github.com/Vladimir Petrigo/pytest-markdown-report/issues"
+Source = "https://github.com/Vladimir Petrigo/pytest-markdown-report"
+
+[tool.hatch.version]
+path = "src/pytest_markdown_report/__about__.py"
+
+[tool.hatch.env]
+requires = [
+    "hatch-pip-compile"
+]
+
+[tool.hatch.envs.default]
+installer = "uv"
+type = "pip-compile"
+path = ".venv"
+pip-compile-resolver = "uv"
+pip-compile-installer = "uv"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+    "mypy>=1.0.0",
+]
+
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/pytest_markdown_report tests}"
+
+[tool.coverage.run]
+source_pkgs = ["pytest_markdown_report", "tests"]
+branch = true
+parallel = true
+omit = [
+    "src/pytest_markdown_report/__about__.py",
+]
+
+[tool.coverage.paths]
+pytest_markdown_report = ["src/pytest_markdown_report", "*/pytest-markdown-report/src/pytest_markdown_report"]
+tests = ["tests", "*/pytest-markdown-report/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
