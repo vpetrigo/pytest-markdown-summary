@@ -7,7 +7,7 @@ name = "pytest-markdown-report"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 keywords = []
 authors = [
@@ -27,8 +27,7 @@ classifiers = [
     "Framework :: Pytest",
 ]
 dependencies = [
-    "pytest>=6.2.4; python_version < '3.14'",
-    "pytest>=7.4; python_version >= '3.14'",
+    "pytest>=7",
     "py-markdown-table~=1.3",
 ]
 
@@ -51,7 +50,6 @@ requires = [
 [tool.hatch.envs.default]
 installer = "uv"
 type = "pip-compile"
-path = ".venv"
 pip-compile-resolver = "uv"
 pip-compile-installer = "uv"
 
@@ -62,6 +60,26 @@ extra-dependencies = [
 
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/pytest_markdown_report tests}"
+
+[tool.hatch.envs.test]
+installer = "uv"
+type = "pip-compile"
+pip-compile-resolver = "uv"
+pip-compile-installer = "uv"
+
+[tool.hatch.envs.test.scripts]
+run = "pytest {args:tests}"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.11", "3.12", "3.13", "3.14"]
+pytest = ["7", "8", "9"]
+
+[tool.hatch.envs.test.overrides]
+matrix.pytest.dependencies = [
+    { value = "pytest>=7,<8", if = ["7"] },
+    { value = "pytest>=8,<9", if = ["8"] },
+    { value = "pytest>=9,<10", if = ["9"] },
+]
 
 [tool.coverage.run]
 source_pkgs = ["pytest_markdown_report", "tests"]
