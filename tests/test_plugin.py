@@ -11,9 +11,9 @@ def run_with_plugin(pytester: pytest.Pytester, tmp_path):
     report_file = tmp_path / "report.md"
 
     def _run(*args: str, use_test_names: bool = True):
-        cmd = ["-p", "pytest_markdown_summary", f"--md-report-file={report_file}"]
+        cmd = ["-p", "pytest_markdown_summary", f"--markdown-summary-file={report_file}"]
         if use_test_names:
-            cmd.append("--md-use-test-names")
+            cmd.append("--markdown-summary-use-test-names")
         cmd.extend(args)
         result = pytester.runpytest(*cmd)
         return result, report_file
@@ -25,7 +25,7 @@ class TestCLIOptions:
     """Test that CLI options control plugin behavior."""
 
     def test_no_report_file_produces_no_output(self, pytester: pytest.Pytester):
-        """Without --md-report-file, no report is generated."""
+        """Without --markdown-summary-file, no report is generated."""
         pytester.makepyfile("""
             def test_pass():
                 assert True
@@ -36,7 +36,7 @@ class TestCLIOptions:
         assert "Passed" not in output or "Subtotal" not in output
 
     def test_report_file_is_created(self, pytester: pytest.Pytester, tmp_path):
-        """--md-report-file creates the specified file."""
+        """--markdown-summary-file creates the specified file."""
         report_file = tmp_path / "out" / "report.md"
         pytester.makepyfile("""
             def test_pass():
@@ -44,8 +44,8 @@ class TestCLIOptions:
         """)
         pytester.runpytest(
             "-p", "pytest_markdown_summary",
-            f"--md-report-file={report_file}",
-            "--md-use-test-names",
+            f"--markdown-summary-file={report_file}",
+            "--markdown-summary-use-test-names",
         )
         assert report_file.exists()
         content = report_file.read_text(encoding="utf-8")
@@ -61,13 +61,13 @@ class TestCLIOptions:
         """)
         pytester.runpytest(
             "-p", "pytest_markdown_summary",
-            f"--md-report-file={report_file}",
-            "--md-use-test-names",
+            f"--markdown-summary-file={report_file}",
+            "--markdown-summary-use-test-names",
         )
         assert report_file.exists()
 
     def test_use_test_names_flag(self, pytester: pytest.Pytester, run_with_plugin):
-        """--md-use-test-names groups by individual test function."""
+        """--markdown-summary-use-test-names groups by individual test function."""
         pytester.makepyfile("""
             def test_a():
                 assert True
@@ -81,7 +81,7 @@ class TestCLIOptions:
         assert "test_b" in content
 
     def test_per_file_grouping_default(self, pytester: pytest.Pytester, run_with_plugin):
-        """Without --md-use-test-names, results are grouped per file."""
+        """Without --markdown-summary-use-test-names, results are grouped per file."""
         pytester.makepyfile("""
             def test_a():
                 assert True
@@ -391,8 +391,8 @@ class TestEdgeCases:
         """)
         result = pytester.runpytest(
             "-p", "pytest_markdown_summary",
-            f"--md-report-file={report_file}",
-            "--md-use-test-names",
+            f"--markdown-summary-file={report_file}",
+            "--markdown-summary-use-test-names",
             "--no-header",
         )
         # Plugin should not crash; exit code 5 = no tests collected
@@ -467,7 +467,7 @@ class TestEdgeCases:
         )
         pytester.runpytest(
             "-p", "pytest_markdown_summary",
-            f"--md-report-file={report_file}",
+            f"--markdown-summary-file={report_file}",
         )
         content = report_file.read_text(encoding="utf-8")
         assert "test_alpha.py" in content
