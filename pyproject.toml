@@ -5,15 +5,19 @@ build-backend = "hatchling.build"
 [project]
 name = "pytest-markdown-summary"
 dynamic = ["version"]
-description = ''
+description = 'A Pytest plugin for generating reports in Markdown format.'
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-keywords = []
+keywords = [
+    "pytest", "plugin", "markdown"
+]
 authors = [
     { name = "Vladimir Petrigo", email = "vladimir.petrigo@gmail.com" },
 ]
 classifiers = [
+    "Environment :: Plugins",
+    "License :: OSI Approved :: MIT License",
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.11",
@@ -23,6 +27,11 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Framework :: Pytest",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Text Processing",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Typing :: Typed",
 ]
 dependencies = [
     "pytest>=7,<10",
