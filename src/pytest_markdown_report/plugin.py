@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import dataclasses
+import pathlib
 
 import pytest
 from py_markdown_table.markdown_table import markdown_table
+
+_REPORT_FILE_OPTION = "--md-report-file"
+_USE_TEST_NAMES_OPTION = "--md-use-test-names"
 
 
 @dataclasses.dataclass(slots=True)
@@ -15,6 +19,16 @@ class _TestResult:
     skip_count: int = 0
     xpass_count: int = 0
     xfail_count: int = 0
+
+    def __iadd__(self, other: _TestResult) -> _TestResult:
+        self.count += other.count
+        self.pass_count += other.pass_count
+        self.fail_count += other.fail_count
+        self.error_count += other.error_count
+        self.skip_count += other.skip_count
+        self.xpass_count += other.xpass_count
+        self.xfail_count += other.xfail_count
+        return self
 
 
 class _TestResultTracker:
@@ -42,9 +56,38 @@ def _get_base_nodeid(item: pytest.Item) -> str:
     return item.nodeid
 
 
+def _get_file_nodeid(item: pytest.Item) -> str:
+    """Get the file-level node ID for per-file grouping."""
+    if item.path is not None:
+        try:
+            return str(item.path.relative_to(item.config.rootpath))
+        except ValueError:
+            return str(item.path)
+    return item.nodeid
+
+
 def _escape_markdown(text: str) -> str:
     """Escape characters that could break markdown table formatting."""
     return text.replace("|", "\\|").replace("\n", " ")
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    group = parser.getgroup("markdown-report", "Markdown report generation")
+    group.addoption(
+        _REPORT_FILE_OPTION,
+        action="store",
+        default=None,
+        metavar="PATH",
+        help="Path to the output Markdown report file. "
+        "Report generation is disabled if not provided.",
+    )
+    group.addoption(
+        _USE_TEST_NAMES_OPTION,
+        action="store_true",
+        default=False,
+        help="Track results per individual test function. "
+        "When disabled (default), results are grouped per test file.",
+    )
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
@@ -54,8 +97,18 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
     outcome = yield
+    report_file = item.config.getoption(_REPORT_FILE_OPTION)
+
+    if report_file is None:
+        return
+
     rep = outcome.get_result()
-    nodeid = _get_base_nodeid(item)
+    use_test_names = item.config.getoption(_USE_TEST_NAMES_OPTION)
+
+    if use_test_names:
+        nodeid = _get_base_nodeid(item)
+    else:
+        nodeid = _get_file_nodeid(item)
 
     if nodeid not in _tracker.tests:
         _tracker.tests[nodeid] = _TestResult()
@@ -92,7 +145,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
                 node.skip_count += 1
 
 
-def result_row(name: str, result: _TestResult) -> dict[str, str]:
+def _result_row(name: str, result: _TestResult) -> dict[str, str]:
     fields = [
         "Name",
         "Passed",
@@ -129,14 +182,28 @@ def result_row(name: str, result: _TestResult) -> dict[str, str]:
     return result_dict
 
 
+def _summary_row(total: _TestResult) -> dict[str, str]:
+    """Build a summary/totals row for the bottom of the table."""
+    return _result_row("TOTAL", total)
+
+
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    report_file = session.config.getoption(_REPORT_FILE_OPTION)
+
+    if report_file is None:
+        return
+
     md_content = []
+    total = _TestResult()
 
     for test_id, node in _tracker.tests.items():
-        md_content.append(result_row(test_id, node))
+        md_content.append(_result_row(test_id, node))
+        total += node
 
     if not md_content:
         return
+
+    md_content.append(_summary_row(total))
 
     markdown = (
         markdown_table(md_content)
@@ -144,4 +211,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         .get_markdown()
     )
 
-    print("\n\n" + markdown)
+    output_path = pathlib.Path(report_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(markdown, encoding="utf-8")
