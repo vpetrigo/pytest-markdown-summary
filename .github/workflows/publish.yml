@@ -31,12 +31,10 @@ jobs:
           enable-cache: true
 
       - name: Install Hatch
-        run: uv tool install hatch
+        run: uv tool install --force "git+https://github.com/vpetrigo/hatch@fix/hardcoded-reliance-on-pip"
 
       - name: Build package
         run: hatch build
 
       - name: Publish to PyPI
-        env:
-          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: hatch publish -r main
