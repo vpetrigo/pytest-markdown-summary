@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 
@@ -11,7 +13,11 @@ def run_with_plugin(pytester: pytest.Pytester, tmp_path):
     report_file = tmp_path / "report.md"
 
     def _run(*args: str, use_test_names: bool = True):
-        cmd = ["-p", "pytest_markdown_summary", f"--markdown-summary-file={report_file}"]
+        cmd = [
+            "-p",
+            "pytest_markdown_summary",
+            f"--markdown-summary-file={report_file}",
+        ]
         if use_test_names:
             cmd.append("--markdown-summary-use-test-names")
         cmd.extend(args)
@@ -43,7 +49,8 @@ class TestCLIOptions:
                 assert True
         """)
         pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
             "--markdown-summary-use-test-names",
         )
@@ -60,7 +67,8 @@ class TestCLIOptions:
                 assert True
         """)
         pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
             "--markdown-summary-use-test-names",
         )
@@ -80,7 +88,9 @@ class TestCLIOptions:
         assert "test_a" in content
         assert "test_b" in content
 
-    def test_per_file_grouping_default(self, pytester: pytest.Pytester, run_with_plugin):
+    def test_per_file_grouping_default(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
         """Without --markdown-summary-use-test-names, results are grouped per file."""
         pytester.makepyfile("""
             def test_a():
@@ -166,7 +176,9 @@ class TestSkipHandling:
         content = report_file.read_text(encoding="utf-8")
         assert "test_skipped" in content
 
-    def test_skipif_false_runs_normally(self, pytester: pytest.Pytester, run_with_plugin):
+    def test_skipif_false_runs_normally(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
         """skipif(False) should NOT count as skip - test should run and pass."""
         pytester.makepyfile("""
             import pytest
@@ -272,7 +284,9 @@ class TestParametrizedGrouping:
         # Subtotal should be 3
         assert "3" in content
 
-    def test_parametrized_mixed_outcomes(self, pytester: pytest.Pytester, run_with_plugin):
+    def test_parametrized_mixed_outcomes(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
         pytester.makepyfile("""
             import pytest
 
@@ -390,7 +404,8 @@ class TestEdgeCases:
             x = 1
         """)
         result = pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
             "--markdown-summary-use-test-names",
             "--no-header",
@@ -466,7 +481,8 @@ class TestEdgeCases:
             """,
         )
         pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
         )
         content = report_file.read_text(encoding="utf-8")
@@ -477,3 +493,200 @@ class TestEdgeCases:
         assert "test_2" not in content
         assert "test_3" not in content
         assert "test_4" not in content
+
+
+class TestReportFormat:
+    """Test the Markdown table format: column names, alignment, and structure."""
+
+    # ------------------------------------------------------------------ #
+    # Feature 1: "Test File" column (renamed from "Name")                 #
+    # ------------------------------------------------------------------ #
+
+    def test_header_has_test_file_column_with_test_names(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """Header row must contain 'Test File' and no bare 'Name' column (use_test_names=True)."""
+        pytester.makepyfile("""
+            def test_pass():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=True)
+        content = report_file.read_text(encoding="utf-8")
+        header_line = content.splitlines()[0]
+        assert "Test File" in header_line
+        # Ensure there is no standalone "Name" column (not part of "Test Name" / "Test File")
+        columns = [c.strip() for c in header_line.strip("|").split("|")]
+        assert "Name" not in columns
+
+    def test_header_has_test_file_column_without_test_names(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """Header row must contain 'Test File' and no bare 'Name' column (use_test_names=False)."""
+        pytester.makepyfile("""
+            def test_pass():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=False)
+        content = report_file.read_text(encoding="utf-8")
+        header_line = content.splitlines()[0]
+        assert "Test File" in header_line
+        columns = [c.strip() for c in header_line.strip("|").split("|")]
+        assert "Name" not in columns
+
+    # ------------------------------------------------------------------ #
+    # Feature 2: "Test Name" column with use_test_names                   #
+    # ------------------------------------------------------------------ #
+
+    def test_test_name_column_present_when_enabled(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """'Test Name' header is present when use_test_names=True."""
+        pytester.makepyfile("""
+            def test_my_function():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=True)
+        content = report_file.read_text(encoding="utf-8")
+        header_line = content.splitlines()[0]
+        assert "Test Name" in header_line
+
+    def test_test_name_column_contains_function_name(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """When use_test_names=True, the test function name appears in the Test Name column."""
+        pytester.makepyfile("""
+            def test_my_function():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=True)
+        content = report_file.read_text(encoding="utf-8")
+        # The function name should appear in a data row
+        data_rows = [
+            line
+            for line in content.splitlines()
+            if "test_my_function" in line and "Test Name" not in line
+        ]
+        assert len(data_rows) >= 1
+        assert "test_my_function" in data_rows[0]
+
+    def test_test_name_column_absent_when_disabled(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """'Test Name' header must NOT be present when use_test_names=False."""
+        pytester.makepyfile("""
+            def test_pass():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=False)
+        content = report_file.read_text(encoding="utf-8")
+        header_line = content.splitlines()[0]
+        assert "Test Name" not in header_line
+
+    def test_class_based_test_name_and_file_columns(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """Class-qualified test name appears in 'Test Name'; file path in 'Test File'."""
+        pytester.makepyfile("""
+            class TestMyClass:
+                def test_method(self):
+                    assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=True)
+        content = report_file.read_text(encoding="utf-8")
+        lines = content.splitlines()
+        header_line = lines[0]
+        columns = [c.strip() for c in header_line.strip("|").split("|")]
+        test_file_idx = columns.index("Test File")
+        test_name_idx = columns.index("Test Name")
+
+        # Find the data row for this test
+        data_row = next(
+            line
+            for line in lines[2:]  # skip header and separator
+            if "TestMyClass" in line
+        )
+        cells = [c.strip() for c in data_row.strip("|").split("|")]
+
+        # "Test File" should contain the file path (not the class/method)
+        assert "TestMyClass" not in cells[test_file_idx]
+        # "Test Name" should contain the class-qualified name
+        assert "TestMyClass::test_method" in cells[test_name_idx]
+
+    # ------------------------------------------------------------------ #
+    # Feature 3: Center alignment for numeric columns                      #
+    # ------------------------------------------------------------------ #
+
+    def test_separator_alignment_with_test_names(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """Numeric columns use ':---:'; text columns use '---' (use_test_names=True)."""
+        pytester.makepyfile("""
+            def test_pass():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=True)
+        content = report_file.read_text(encoding="utf-8")
+        lines = content.splitlines()
+        header_line = lines[0]
+        separator_line = lines[1]
+
+        columns = [c.strip() for c in header_line.strip("|").split("|")]
+        separators = [c.strip() for c in separator_line.strip("|").split("|")]
+
+        center_aligned = {
+            "Passed",
+            "Failed",
+            "Errored",
+            "Skipped",
+            "Unexpectedly Passed",
+            "Expectedly Failed",
+            "Subtotal",
+        }
+        left_aligned = {"Test File", "Test Name"}
+
+        for col, sep in zip(columns, separators, strict=True):
+            if col in center_aligned:
+                assert re.fullmatch(r":-+:", sep), (
+                    f"Column '{col}' should be center-aligned (:---:), got '{sep}'"
+                )
+            elif col in left_aligned:
+                assert re.fullmatch(r"-+", sep), (
+                    f"Column '{col}' should be left-aligned (---), got '{sep}'"
+                )
+
+    def test_separator_alignment_without_test_names(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
+        """Numeric columns use ':---:'; 'Test File' uses '---' (use_test_names=False)."""
+        pytester.makepyfile("""
+            def test_pass():
+                assert True
+        """)
+        _, report_file = run_with_plugin(use_test_names=False)
+        content = report_file.read_text(encoding="utf-8")
+        lines = content.splitlines()
+        header_line = lines[0]
+        separator_line = lines[1]
+
+        columns = [c.strip() for c in header_line.strip("|").split("|")]
+        separators = [c.strip() for c in separator_line.strip("|").split("|")]
+
+        center_aligned = {
+            "Passed",
+            "Failed",
+            "Errored",
+            "Skipped",
+            "Unexpectedly Passed",
+            "Expectedly Failed",
+            "Subtotal",
+        }
+
+        for col, sep in zip(columns, separators, strict=True):
+            if col in center_aligned:
+                assert re.fullmatch(r":-+:", sep), (
+                    f"Column '{col}' should be center-aligned (:---:), got '{sep}'"
+                )
+            elif col == "Test File":
+                assert re.fullmatch(r"-+", sep), (
+                    f"Column 'Test File' should be left-aligned (---), got '{sep}'"
+                )
