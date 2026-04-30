@@ -13,7 +13,11 @@ def run_with_plugin(pytester: pytest.Pytester, tmp_path):
     report_file = tmp_path / "report.md"
 
     def _run(*args: str, use_test_names: bool = True):
-        cmd = ["-p", "pytest_markdown_summary", f"--markdown-summary-file={report_file}"]
+        cmd = [
+            "-p",
+            "pytest_markdown_summary",
+            f"--markdown-summary-file={report_file}",
+        ]
         if use_test_names:
             cmd.append("--markdown-summary-use-test-names")
         cmd.extend(args)
@@ -45,7 +49,8 @@ class TestCLIOptions:
                 assert True
         """)
         pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
             "--markdown-summary-use-test-names",
         )
@@ -62,7 +67,8 @@ class TestCLIOptions:
                 assert True
         """)
         pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
             "--markdown-summary-use-test-names",
         )
@@ -82,7 +88,9 @@ class TestCLIOptions:
         assert "test_a" in content
         assert "test_b" in content
 
-    def test_per_file_grouping_default(self, pytester: pytest.Pytester, run_with_plugin):
+    def test_per_file_grouping_default(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
         """Without --markdown-summary-use-test-names, results are grouped per file."""
         pytester.makepyfile("""
             def test_a():
@@ -168,7 +176,9 @@ class TestSkipHandling:
         content = report_file.read_text(encoding="utf-8")
         assert "test_skipped" in content
 
-    def test_skipif_false_runs_normally(self, pytester: pytest.Pytester, run_with_plugin):
+    def test_skipif_false_runs_normally(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
         """skipif(False) should NOT count as skip - test should run and pass."""
         pytester.makepyfile("""
             import pytest
@@ -274,7 +284,9 @@ class TestParametrizedGrouping:
         # Subtotal should be 3
         assert "3" in content
 
-    def test_parametrized_mixed_outcomes(self, pytester: pytest.Pytester, run_with_plugin):
+    def test_parametrized_mixed_outcomes(
+        self, pytester: pytest.Pytester, run_with_plugin
+    ):
         pytester.makepyfile("""
             import pytest
 
@@ -392,7 +404,8 @@ class TestEdgeCases:
             x = 1
         """)
         result = pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
             "--markdown-summary-use-test-names",
             "--no-header",
@@ -468,7 +481,8 @@ class TestEdgeCases:
             """,
         )
         pytester.runpytest(
-            "-p", "pytest_markdown_summary",
+            "-p",
+            "pytest_markdown_summary",
             f"--markdown-summary-file={report_file}",
         )
         content = report_file.read_text(encoding="utf-8")
@@ -548,7 +562,8 @@ class TestReportFormat:
         content = report_file.read_text(encoding="utf-8")
         # The function name should appear in a data row
         data_rows = [
-            line for line in content.splitlines()
+            line
+            for line in content.splitlines()
             if "test_my_function" in line and "Test Name" not in line
         ]
         assert len(data_rows) >= 1
@@ -586,7 +601,8 @@ class TestReportFormat:
 
         # Find the data row for this test
         data_row = next(
-            line for line in lines[2:]  # skip header and separator
+            line
+            for line in lines[2:]  # skip header and separator
             if "TestMyClass" in line
         )
         cells = [c.strip() for c in data_row.strip("|").split("|")]
@@ -618,12 +634,17 @@ class TestReportFormat:
         separators = [c.strip() for c in separator_line.strip("|").split("|")]
 
         center_aligned = {
-            "Passed", "Failed", "Errored", "Skipped",
-            "Unexpectedly Passed", "Expectedly Failed", "Subtotal",
+            "Passed",
+            "Failed",
+            "Errored",
+            "Skipped",
+            "Unexpectedly Passed",
+            "Expectedly Failed",
+            "Subtotal",
         }
         left_aligned = {"Test File", "Test Name"}
 
-        for col, sep in zip(columns, separators):
+        for col, sep in zip(columns, separators, strict=True):
             if col in center_aligned:
                 assert re.fullmatch(r":-+:", sep), (
                     f"Column '{col}' should be center-aligned (:---:), got '{sep}'"
@@ -651,11 +672,16 @@ class TestReportFormat:
         separators = [c.strip() for c in separator_line.strip("|").split("|")]
 
         center_aligned = {
-            "Passed", "Failed", "Errored", "Skipped",
-            "Unexpectedly Passed", "Expectedly Failed", "Subtotal",
+            "Passed",
+            "Failed",
+            "Errored",
+            "Skipped",
+            "Unexpectedly Passed",
+            "Expectedly Failed",
+            "Subtotal",
         }
 
-        for col, sep in zip(columns, separators):
+        for col, sep in zip(columns, separators, strict=True):
             if col in center_aligned:
                 assert re.fullmatch(r":-+:", sep), (
                     f"Column '{col}' should be center-aligned (:---:), got '{sep}'"
