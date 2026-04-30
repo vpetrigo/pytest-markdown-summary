@@ -85,8 +85,9 @@ def _escape_markdown(text: str) -> str:
 
 def _split_nodeid(nodeid: str) -> tuple[str, str]:
     """Split a nodeid into file path and test name parts."""
+    has_test_name_expected_len = 2
     parts = nodeid.split("::", 1)
-    if len(parts) == 2:
+    if len(parts) == has_test_name_expected_len:
         return parts[0], parts[1]
     return nodeid, ""
 
@@ -110,12 +111,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+# ruff: ignore[ARG001]
 def pytest_sessionstart(session: pytest.Session) -> None:
     _tracker.reset()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
+def pytest_runtest_makereport(
+    item: pytest.Item,
+    # ruff: ignore[ARG001]
+    call: pytest.CallInfo[None],
+):
     outcome = yield
     report_file = item.config.getoption(_REPORT_FILE_OPTION)
 
@@ -131,7 +137,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
 
     node = _tracker.tests[nodeid]
 
-    if rep.when in ("setup", "teardown"):
+    if rep.when in {"setup", "teardown"}:
         if rep.outcome == "failed":
             node.count += 1
             node.error_count += 1
@@ -203,7 +209,11 @@ def _summary_row(total: _TestResult, *, use_test_names: bool = False) -> dict[st
     return _result_row("TOTAL", total, use_test_names=use_test_names)
 
 
-def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+def pytest_sessionfinish(
+    session: pytest.Session,
+    # ruff: ignore[ARG001]
+    exitstatus: int,
+) -> None:
     report_file = session.config.getoption(_REPORT_FILE_OPTION)
 
     if report_file is None:
