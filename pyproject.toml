@@ -66,6 +66,10 @@ type = "pip-compile"
 pip-compile-resolver = "uv"
 pip-compile-installer = "uv"
 
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = ["ruff~=0.15"]
+config-path = "none"
+
 [tool.hatch.envs.types]
 extra-dependencies = [
     "mypy>=1.0.0",
