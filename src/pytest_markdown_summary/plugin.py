@@ -5,10 +5,21 @@ import pathlib
 from typing import Self
 
 import pytest
-from py_markdown_table.markdown_table import markdown_table
+from mdtables import Column as MdColumn
+from mdtables import Table as MdTable
 
 _REPORT_FILE_OPTION = "--markdown-summary-file"
 _USE_TEST_NAMES_OPTION = "--markdown-summary-use-test-names"
+
+_CENTER_ALIGNED_COLUMNS = [
+    "Passed",
+    "Failed",
+    "Errored",
+    "Skipped",
+    "Unexpectedly Passed",
+    "Expectedly Failed",
+    "Subtotal",
+]
 
 
 @dataclasses.dataclass(slots=True)
@@ -70,6 +81,14 @@ def _get_file_nodeid(item: pytest.Item) -> str:
 def _escape_markdown(text: str) -> str:
     """Escape characters that could break markdown table formatting."""
     return text.replace("|", "\\|").replace("\n", " ")
+
+
+def _split_nodeid(nodeid: str) -> tuple[str, str]:
+    """Split a nodeid into file path and test name parts."""
+    parts = nodeid.split("::", 1)
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    return nodeid, ""
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -141,17 +160,17 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
             node.skip_count += 1
 
 
-def _result_row(name: str, result: _TestResult) -> dict[str, str]:
-    fields = [
-        "Name",
-        "Passed",
-        "Failed",
-        "Errored",
-        "Skipped",
-        "Unexpectedly Passed",
-        "Expectedly Failed",
-        "Subtotal",
-    ]
+def _result_row(
+    test_file: str,
+    result: _TestResult,
+    *,
+    test_name: str = "",
+    use_test_names: bool = False,
+) -> dict[str, str]:
+    fields = ["Test File"]
+    if use_test_names:
+        fields.append("Test Name")
+    fields.extend(_CENTER_ALIGNED_COLUMNS)
     map_to_attr = {
         "Passed": "pass_count",
         "Failed": "fail_count",
@@ -159,6 +178,7 @@ def _result_row(name: str, result: _TestResult) -> dict[str, str]:
         "Skipped": "skip_count",
         "Unexpectedly Passed": "xpass_count",
         "Expectedly Failed": "xfail_count",
+        "Subtotal": "count",
     }
 
     def make_count_str(count: int) -> str:
@@ -168,19 +188,19 @@ def _result_row(name: str, result: _TestResult) -> dict[str, str]:
 
     for field in fields:
         match field:
-            case "Name":
-                result_dict[field] = _escape_markdown(name)
-            case "Subtotal":
-                result_dict[field] = str(result.count)
+            case "Test File":
+                result_dict[field] = _escape_markdown(test_file)
+            case "Test Name":
+                result_dict[field] = _escape_markdown(test_name)
             case _:
                 result_dict[field] = make_count_str(getattr(result, map_to_attr[field]))
 
     return result_dict
 
 
-def _summary_row(total: _TestResult) -> dict[str, str]:
+def _summary_row(total: _TestResult, *, use_test_names: bool = False) -> dict[str, str]:
     """Build a summary/totals row for the bottom of the table."""
-    return _result_row("TOTAL", total)
+    return _result_row("TOTAL", total, use_test_names=use_test_names)
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
@@ -189,24 +209,39 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     if report_file is None:
         return
 
+    use_test_names = session.config.getoption(_USE_TEST_NAMES_OPTION)
     md_content = []
     total = _TestResult()
 
     for test_id, node in _tracker.tests.items():
-        md_content.append(_result_row(test_id, node))
+        if use_test_names:
+            test_file, test_name = _split_nodeid(test_id)
+            md_content.append(
+                _result_row(test_file, node, test_name=test_name, use_test_names=True)
+            )
+        else:
+            md_content.append(_result_row(test_id, node))
         total += node
 
     if not md_content:
         return
 
-    md_content.append(_summary_row(total))
-
-    markdown = (
-        markdown_table(md_content)
-        .set_params(padding_width=3, padding_weight="centerleft", quote=False)
-        .get_markdown()
+    md_content.append(_summary_row(total, use_test_names=use_test_names))
+    center_aligned_columns_set = frozenset(_CENTER_ALIGNED_COLUMNS)
+    columns = list(md_content[0].keys())
+    table = MdTable(
+        *(
+            MdColumn(
+                col,
+                alignment="center" if col in center_aligned_columns_set else "left",
+            )
+            for col in columns
+        )
     )
+    for row in md_content:
+        table.row(*(row[col] for col in columns))
 
+    markdown = str(table)
     output_path = pathlib.Path(report_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(markdown, encoding="utf-8")
