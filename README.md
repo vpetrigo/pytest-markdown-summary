@@ -1,7 +1,7 @@
 # pytest-markdown-summary
 
 [![CI](https://github.com/vpetrigo/pytest-markdown-summary/actions/workflows/ci.yml/badge.svg)](https://github.com/vpetrigo/pytest-markdown-summary/actions/workflows/ci.yml)
-![PyPI - Version](https://img.shields.io/pypi/v/pytest-markdown-summary)
+[![PyPI - Version](https://img.shields.io/pypi/v/pytest-markdown-summary)](https://pypi.org/project/pytest-markdown-summary)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytest-markdown-summary)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/pytest-markdown-summary?period=monthly&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads%2Fmonth)](https://pepy.tech/projects/pytest-markdown-summary)
 
