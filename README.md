@@ -69,11 +69,11 @@ pytest --markdown-summary-file=report.md --markdown-summary-use-test-names
 pytest --markdown-summary-file=report.md
 ```
 
-| Name               | Passed | Failed | Errored | Skipped | Unexpectedly Passed | Expectedly Failed | Subtotal |
-|--------------------|--------|--------|---------|---------|---------------------|-------------------|----------|
-| tests/test_auth.py | 5      |        |         | 1       |                     |                   | 6        |
-| tests/test_api.py  | 8      | 2      |         |         |                     | 1                 | 11       |
-| TOTAL              | 13     | 2      |         | 1       |                     | 1                 | 17       |
+| Test File          | Passed | Failed | Errored | Skipped | Unexpectedly Passed | Expectedly Failed | Subtotal |
+|:-------------------|:------:|:------:|:-------:|:-------:|:-------------------:|:-----------------:|:--------:|
+| tests/test_auth.py |   5    |        |         |    1    |                     |                   |    6     |
+| tests/test_api.py  |   8    |   2    |         |         |                     |         1         |    11    |
+| TOTAL              |   13   |   2    |         |    1    |                     |         1         |    17    |
 
 ### Per-Test Mode
 
@@ -81,13 +81,13 @@ pytest --markdown-summary-file=report.md
 pytest --markdown-summary-file=report.md --markdown-summary-use-test-names
 ```
 
-| Name                                | Passed | Failed | Errored | Skipped | Unexpectedly Passed | Expectedly Failed | Subtotal |
-|-------------------------------------|--------|--------|---------|---------|---------------------|-------------------|----------|
-| tests/test_auth.py::test_login      | 3      |        |         |         |                     |                   | 3        |
-| tests/test_auth.py::test_logout     | 1      |        |         |         |                     |                   | 1        |
-| tests/test_api.py::test_get_users   | 1      |        |         |         |                     |                   | 1        |
-| tests/test_api.py::test_create_user |        | 1      |         |         |                     |                   | 1        |
-| TOTAL                               | 5      | 1      |         |         |                     |                   | 6        |
+| Test File          | Test Name        | Passed | Failed | Errored | Skipped | Unexpectedly Passed | Expectedly Failed | Subtotal |
+|:-------------------|:-----------------|:------:|:------:|:-------:|:-------:|:-------------------:|:-----------------:|:--------:|
+| tests/test_auth.py | test_login       |   3    |        |         |         |                     |                   |    3     |
+| tests/test_auth.py | test_logout      |   1    |        |         |         |                     |                   |    1     |
+| tests/test_api.py  | test_get_users   |   1    |        |         |         |                     |                   |    1     |
+| tests/test_api.py  | test_create_user |        |   1    |         |         |                     |                   |    1     |
+| TOTAL              |                  |   5    |   1    |         |         |                     |                   |    6     |
 
 > **Note:** Parametrized tests (e.g., `@pytest.mark.parametrize`) are automatically grouped into a single row under the
 > base test name.
